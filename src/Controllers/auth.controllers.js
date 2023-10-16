@@ -1,4 +1,4 @@
-import { getUserByEmail, createUser, getToken } from "../Repositories/auth.repository.js";
+import { getUserByEmail, createUser, getToken, loginUser } from "../Repositories/auth.repository.js";
 import bcrypt from "bcrypt";
 import { v4 as uuid } from "uuid";
 
