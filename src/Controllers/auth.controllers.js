@@ -1,4 +1,6 @@
 import { getUserByEmail, createUser, getToken } from "../Repositories/auth.repository.js";
+import bcrypt from "bcrypt";
+import { v4 as uuid } from "uuid";
 
 export async function signUp(req, res) {
     const { email, password, username, picture } = req.body
@@ -13,7 +15,7 @@ export async function signUp(req, res) {
       if (userExist.rowCount > 0) return res.status(409).send("Email já cadastrado!")
   
       
-      const hash = bcrypt.hashSync(password, 10)
+      const hash = bcrypt.hashSync(password, 7)
   
       await createUser(email, hash, username, picture);
   
