@@ -14,18 +14,21 @@ export function createUser(email, hash, username, picture) {
 
 export function loginUser(email) {
     return db.query(`
-    SELECT users.id, users.name, users.email, users.password, sessions.token
-    FROM users
-    LEFT JOIN sessions ON users.id = sessions."userId"
-    WHERE users.email = $1;
-  `, [email])
+      SELECT users.id, users.email, users.password, users.username, users.picture, sessions.token
+      FROM users
+      LEFT JOIN sessions ON users.id = sessions."userid"
+      WHERE users.email = $1;
+    `, [email]);
   }
+  
 
   export function getToken() {
      return`
             INSERT INTO sessions 
-                ("userId", token)
+                ("userid", token)
             VALUES 
                 ($1, $2)
             `
   }
+
+  

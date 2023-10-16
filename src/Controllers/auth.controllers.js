@@ -1,6 +1,7 @@
 import { getUserByEmail, createUser, getToken, loginUser } from "../Repositories/auth.repository.js";
 import bcrypt from "bcrypt";
 import { v4 as uuid } from "uuid";
+import db from "../Database/databaseConnection.js";
 
 export async function signUp(req, res) {
     const { email, password, username, picture } = req.body
