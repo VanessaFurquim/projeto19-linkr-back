@@ -1,3 +1,5 @@
+import db from "../Database/databaseConnection";
+
 export function getUserByEmail(email) {
     return db.query(`SELECT * FROM users WHERE email = $1`, [email]);
 }
