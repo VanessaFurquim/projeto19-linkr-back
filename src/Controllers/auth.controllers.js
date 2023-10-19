@@ -56,7 +56,6 @@ export async function postSignUp(req, res) {
 
 export async function signOut(req, res) {
     const session = res.locals.session
-    console.log("já passou pela validação" , session.rows[0])
 
     try{
         await deleteToken(session)
