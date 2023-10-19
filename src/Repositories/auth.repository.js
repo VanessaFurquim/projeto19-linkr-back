@@ -1,34 +1,51 @@
-import db from "../Database/databaseConnection.js";
+import { db } from "../Database/databaseConnection.js"
+// -------- repository de signIn -----------
 
-export function getUserByEmail(email) {
-    return db.query(`SELECT * FROM users WHERE email = $1`, [email]);
+export function findUser(email) {
+    const resultUser = db.query(`SELECT * FROM users WHERE email = $1;`, [email])
+
+    return resultUser;
 }
 
-export function createUser(email, hash, username, picture) {
-    return db.query(`
-    INSERT INTO users 
-    (email, password, username, picture)
-    VALUES ($1, $2, $3, $4);
-    `, [email, hash, username, picture]);
+export function insertSession(token, user) {
+    const resultInsertSession = db.query(`INSERT INTO sessions (token, "userId") VALUES ($1, $2);`, [token, user.rows[0].id]);
+
+    return resultInsertSession;
+}
+// -------- repository de signUp -----------
+
+export function findEmail(email) {
+    const resultEmail = db.query(`SELECT email FROM users WHERE email = $1`, [email])
+
+    return resultEmail;
 }
 
-export function loginUser(email) {
-    return db.query(`
-      SELECT users.id, users.email, users.password, users.username, users.picture, sessions.token
-      FROM users
-      LEFT JOIN sessions ON users.id = sessions."userid"
-      WHERE users.email = $1;
-    `, [email]);
-  }
-  
+export function insertUser(body, passwordHash) {
+    const { email, username, photo } = body;
 
-  export function getToken() {
-     return`
-            INSERT INTO sessions 
-                ("userid", token)
-            VALUES 
-                ($1, $2)
-            `
-  }
+    const resultInsertUser = db.query(`INSERT INTO users (email, password, username, photo ) VALUES ($1, $2, $3, $4);`,
+        [ email,  passwordHash, username, photo ]);
 
-  
+    return resultInsertUser;
+}
+
+
+// --------- repository de token ----------
+
+export function getToken(token) {
+    const resultToken = db.query(`SELECT token FROM sessions WHERE token = $1;`, [token])
+   
+    return resultToken;
+}
+
+export function searchUser (session){
+    const resultCompare = db.query(`SELECT "userId" FROM sessions WHERE token = $1;`, [session.rows[0].token])
+    
+    return resultCompare;
+}
+
+export function deleteToken(session) {
+    const resultDelete = db.query(`DELETE FROM sessions WHERE token = $1;`, [session.rows[0].token])
+
+    return resultDelete;
+}

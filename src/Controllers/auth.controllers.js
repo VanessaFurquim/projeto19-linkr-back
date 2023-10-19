@@ -1,59 +1,71 @@
-import { getUserByEmail, createUser, getToken, loginUser } from "../Repositories/auth.repository.js";
-import bcrypt from "bcrypt";
-import { v4 as uuid } from "uuid";
-import db from "../Database/databaseConnection.js";
+import bcrypt from 'bcrypt';
+import { stripHtml } from "string-strip-html";
+import { v4 as uuid } from 'uuid';
+import { deleteToken, findEmail, findUser, insertSession, insertUser } from '../Repositories/auth.repository.js';
 
-export async function signUp(req, res) {
-    const { email, password, username, picture } = req.body
-  
-    try {
-  
-      if (!email || !password || !username || !picture) {
-          return res.status(400).send("Preencha todos os campos!")
-        }
-  
-      const userExist = await getUserByEmail(email);
-      if (userExist.rowCount > 0) return res.status(409).send("Email já cadastrado!")
-  
-      
-      const hash = bcrypt.hashSync(password, 7)
-  
-      await createUser(email, hash, username, picture);
-  
-      res.sendStatus(201)
-  
-    } catch (err) {
-      res.status(500).send(err.message)
-    }
-  }
+// ---------- Controllers SignIn -------------
+export async function postSignIn(req, res) {
 
-  export async function signIn(req, res) {
     const { email, password } = req.body;
-    const token = uuid();
+
+    const sanitizedPassword = stripHtml(password).result.trim();
 
 
     try {
-        const user = (await loginUser(email)).rows[0];
+        const user = await findUser(email)
 
-        const verifyPassword = bcrypt.compareSync(password, user.password);
-        if (!verifyPassword) { return res.status(401).send("Senha incorreta") };
+        if (user.rowCount === 0) return res.status(401).send({message:"User not registered!"});
 
-        if (!user) {
-            return res.status(401).send("Email incorreto")
-        }
+        const passwordIsCorrect = bcrypt.compareSync(sanitizedPassword, user.rows[0].password);
+        if (!passwordIsCorrect) return res.status(401).send({message: "Incorrect password!"});
 
-        if (user.token === null) {
-            await db.query(
-            getToken()
-            ,[user.id, token])
-            return res.send(token)
-        }
+        const token = uuid();
 
-        res.send(user.token);
+        await insertSession(token, user)  
+
+        return res.status(200).send({ userId: user.rows[0].id, token: token, username: user.rows[0].username, picture: user.rows[0].photo });
+
     } catch (err) {
         res.status(500).send(err.message);
     }
 }
 
+// ------------ Controllers SignUp -------------------
+export async function postSignUp(req, res) {
+    const { email, password, username, photo } = req.body;
+    const senha = password;
 
- 
+    const passwordHash = bcrypt.hashSync(senha, 10);
+
+    try {
+
+        const searchUser = await findEmail(email);
+
+        if (searchUser.rowCount > 0) return res.status(409).send({message: 'email já cadastrado'});
+
+        await insertUser(req.body, passwordHash)
+
+        res.sendStatus(201)
+
+    } catch (err) {
+        res.status(500).send(err.message)
+    }
+}
+
+// -------------- Controllers SignOut -----------------
+
+export async function signOut(req, res) {
+    const session = res.locals.session
+    console.log("já passou pela validação" , session.rows[0])
+
+    try{
+        await deleteToken(session)
+        
+        res.sendStatus(204)
+     } catch (err) {
+        res.status(500).send(err.message);
+    }
+
+
+}
+
