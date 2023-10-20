@@ -1,4 +1,4 @@
-import { countLikes, findAllPublishes, findUserId, postPublish } from "../Repositories/publishes.repository.js";
+import { countLikes, findAllPublishes, findUserId, insertLikes, postPublish } from "../Repositories/publishes.repository.js";
 
 export async function newPublish(req, res) {
     const { url, description } = req.body;
@@ -57,6 +57,24 @@ export async function getPublishes(req, res) {
     } catch (err) {
         res.status(500).send(err.message);
     }
+}
 
+export async function likes(req, res) {
+    const { idPost } = req.body
+    console.log(idPost)
+    const session = res.locals.session
 
+    try{
+        const user = await findUserId(session);
+        
+        await insertLikes(user, idPost);
+        
+        const like = await countLikes(idPost)
+        console.log(like.rows[0])
+
+        res.status(201).send(like.rows[0])
+
+    } catch (err) {
+        res.status(500).send(err.message);
+    }
 }

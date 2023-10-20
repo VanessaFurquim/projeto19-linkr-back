@@ -35,9 +35,15 @@ export function findAllPublishes() {
     return publishesResult
 }
 
+// ------------------- likes --------------------------
 
-export function countLikes(publishes) {
-    const resultLike = db.query(` SELECT COUNT(likes) AS "totalLikes" FROM likes WHERE "userId" = $1 GROUP BY "postId";`, [publishes.rows[0].postId])
+export function insertLikes(user, idPost){
+    const resultInsertLike = db.query(` INSERT INTO likes ("userId", "postId") VALUES ($1, $2);`, [user.rows[0].userId, idPost ])
+
+    return resultInsertLike
+}
+export function countLikes(idPost) {
+    const resultLike = db.query(` SELECT COUNT(likes) AS "likes" FROM likes WHERE "postId" = $1;`, [idPost])
 
     return resultLike
 }
